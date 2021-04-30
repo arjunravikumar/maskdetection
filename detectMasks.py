@@ -63,9 +63,9 @@ def extractFaceDetails(bodyPart):
     return box,confidence,maskStatus
 
 def putImageInBucket():
-    global s3BucketNameForFullImage,s3BucketNameForFullImage
+    global s3BucketNameForFullImage,s3BucketNameForFullImage,index
     s3Bucket = boto3.client('s3', region_name='us-east-1')
-    s3Bucket.upload_file("peopleWithBoundingBoxes.jpg", s3BucketNameForFullImage, "peopleWithBoundingBoxes.jpg")
+    s3Bucket.upload_file("peopleWithBoundingBoxes"+index+".jpg", s3BucketNameForFullImage, "peopleWithBoundingBoxes.jpg")
 
 def saveImagesOfPeopleWithoutMasks(peopleArray,percentOfPeopleWithoutMasks):
     global previousSavedTime,s3BucketNameForIndividualImages
@@ -144,6 +144,7 @@ def changeBackgroundColour(img,safe,precentageOfPeopleNotWearingMask):
     return base
 
 def captureImage(checkAndSaveMasks):
+    global index
     video_url = 'https://www.youtube.com/watch?v=oIBERbq2tLA'
     ydl_opts = {}
     ydl = youtube_dl.YoutubeDL(ydl_opts)
@@ -203,13 +204,16 @@ def captureImage(checkAndSaveMasks):
     if(numberOfPeopleWithNoMask > 0):
         safe = False
     frame = changeBackgroundColour(frame,safe,precentageOfPeopleNotWearingMask)
-    cv2.imwrite("peopleWithBoundingBoxes.jpg", frame)
+    cv2.imwrite("peopleWithBoundingBoxes"+index+".jpg", frame)
     putImageInBucket()
     peopleWithoutMasks = []
     cv2.destroyAllWindows()
     return (numberOfPeopleWithNoMask == 0)
 
 if __name__ == '__main__':
+    index = ""
+    if(len(sys.argv)>1):
+        index = sys.argv[1]
     createDDBtable()
     while(True):
         startTime = time.time()
